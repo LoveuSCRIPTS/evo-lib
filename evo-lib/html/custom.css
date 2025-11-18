@@ -1,0 +1,14 @@
+/* Evo-lib custom overrides
+   Keep this file for server-specific tweaks. Core menu design now lives in style.css.
+   Examples (uncomment and adjust as needed):
+
+   :root {
+     --text: #e7eaf1;
+   }
+
+   .evo-toast.my-notify { border-radius: 20px; }
+   .evo-pbar.my-bar .track { height: 12px; }
+*/
+
+
+

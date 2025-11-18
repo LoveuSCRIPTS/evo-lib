@@ -1,0 +1,452 @@
+﻿                               :root {
+  --toast-bg: rgba(17, 18, 23, 0.94);
+  --toast-border: rgba(255, 255, 255, 0.08);
+  --text: #e5e7eb;
+  --muted: #a1a1aa;
+  --radius: 16px;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  --accent: #FF970E; /* default brand accent */
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+}
+
+/* Disable text selection/copy in NUI */
+html, body, #evo-container, #evo-progress-container, #evo-modal-root,
+.evo-modal, .evo-panel, .evo-toast, .evo-pbar, .evo-pcircle,
+.evo-list, .evo-item, .evo-btn, .evo-text, .evo-cat, .evo-catdetail,
+#evo-modal-root * {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* If you want to allow selection in inputs only, keep this */
+.evo-input { -webkit-user-select: text !important; user-select: text !important; }
+
+/* Remove selection highlight in modal entirely (except inputs) */
+#evo-modal-root *::selection { background: transparent; color: inherit; }
+.evo-input::selection { background: rgba(99,163,255,0.35); color: #fff; }
+
+#evo-container {
+  position: fixed;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  max-width: 380px;
+  pointer-events: none; /* allow game interaction */
+}
+
+/* Progress overlay container */
+#evo-progress-container { position: fixed; inset: 0; pointer-events: none; }
+/* Modal root */
+#evo-modal-root { position: fixed; inset: 0; pointer-events: none; }
+
+/* Positions for fixed-progress elements (namespaced) */
+.p-pos-top-center    { position: fixed; top: 6%; left: 50%; transform: translateX(-50%); }
+.p-pos-bottom-center { position: fixed; bottom: 6%; left: 50%; transform: translateX(-50%); }
+.p-pos-center        { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Progress Bar */
+.evo-pbar {
+  pointer-events: auto;
+  width: min(480px, 70vw);
+  background: var(--toast-bg);
+  border: 1px solid var(--toast-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px 14px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 8px 12px;
+  color: var(--text);
+}
+.evo-pbar .label { grid-column: 1 / span 2; font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.evo-pbar .track { position: relative; height: 9px; background: transparent; grid-column: 1 / span 1; display: block; overflow: visible; border-radius: 999px; }
+.evo-pbar .track::before { content:""; position:absolute; inset:0; display: none; }
+/* Center-outwards fill: use GPU-friendly transforms for smoothness */
+.evo-pbar .track .fill {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;
+  width: 0;              /* start collapsed from center */
+  transform: translateX(-50%); /* center anchor */
+  background: var(--accent);
+  /* Core bright glow + soft halo with small spread for visible side glow */
+  box-shadow: 0 0 8px var(--accent), 0 0 18px 2px var(--accentSoft);
+  filter: saturate(1.06);
+  border-radius: 999px;  /* rounded ends */
+  will-change: width; /* we're animating width now */
+}
+.evo-pbar .percent { font-size: 13px; color: #cfd2d9; align-self: end; }
+/* removed indeterminate legacy animation */
+
+/* Minimal transparent variant */
+.evo-pbar.p-minimal {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  width: min(600px, 70vw);
+}
+.evo-pbar.p-minimal .label { text-align: center; margin-bottom: 4px; opacity: 0.95; }
+.evo-pbar.p-minimal .label { font-size: 14px; }
+.evo-pbar.p-minimal .track { height: 7px; background: rgba(255,255,255,0.18); overflow: visible; }
+.evo-pbar.p-minimal .percent { display: none; }
+
+/* Compact width/typography */
+.evo-pbar.p-compact { width: min(480px, 70vw); }
+.evo-pbar.p-compact .label { font-size: 14px; }
+.evo-pbar.p-compact .track { height: 6px; overflow: visible; }
+
+/* Unused legacy keyframes (not referenced by UI). */
+@keyframes evo-pbar-center-out-scale {
+  0%   { width: 0%; }
+  40%  { width: 60%; } /* normálna rýchlosť cez stred */
+  65%  { width: 85%; } /* jemné spomalenie začne skôr */
+  100%  { width: 100%; } /* dojazd je plynulejší */
+}
+
+/* Progress Circle */
+.evo-pcircle {
+  pointer-events: auto; display: grid; place-items: center; color: var(--text);
+}
+.evo-pcircle .wrap { position: static; display: flex; flex-direction: column; align-items: center; }
+.evo-pcircle svg { display: block; }
+.evo-pcircle .canvas { position: relative; display: inline-block; filter: drop-shadow(0 0 8px var(--accentSoft)); }
+.evo-pcircle .label { position: static; text-align: center; font-weight: 600; font-size: 13px; line-height: 1.2; color: var(--text); margin-top: 8px; }
+.evo-pcircle .percent { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; font-weight: 700; color: #e8eaf1; text-shadow: 0 1px 2px rgba(0,0,0,.5); line-height: 1; font-variant-numeric: tabular-nums; }
+
+.pos-top-right { top: 0; right: 0; align-items: flex-end; }
+.pos-top-left { top: 0; left: 0; align-items: flex-start; }
+.pos-bottom-right { bottom: 0; right: 0; align-items: flex-end; }
+.pos-bottom-left { bottom: 0; left: 0; align-items: flex-start; }
+.pos-top-center { top: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+.pos-bottom-center { bottom: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+
+.evo-toast {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: 'icon text';
+  gap: 12px 12px;
+  align-items: start;
+  width: min(360px, 78vw);
+  padding: 18px 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)) , var(--toast-bg);
+  border: 1px solid var(--toast-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow); /* remove inner glow around frame */
+  color: var(--text);
+  pointer-events: auto; /* allow clicking to dismiss */
+  overflow: hidden;
+  will-change: transform, opacity;
+  /* Slide in from the right (slower) */
+  animation: evo-slide-in 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  /* Removed backdrop-filter due to CEF black box artifacts */
+  min-height: 64px;
+}
+
+.evo-toast .evo-icon { grid-area: icon; align-self: center; margin-top: 2px; }
+.evo-toast .evo-text { grid-area: text; align-self: start; }
+
+.evo-toast::before {
+  content: "";
+  position: absolute;
+  inset: 0; /* cover from very left */
+  pointer-events: none;
+  border-radius: inherit; /* match toast (square vs rounded) */
+  /* Subtle left-to-right accent blend inside the toast */
+  background: linear-gradient(
+    90deg,
+    var(--accentA12, rgba(255,151,14,0.12)) 0%,
+    var(--accentA12, rgba(255,151,14,0.12)) 12%,
+    var(--accentA08, rgba(255,151,14,0.08)) 24%,
+    var(--accentA04, rgba(255,151,14,0.04)) 36%,
+    rgba(0,0,0,0) 52%
+  );
+}
+
+.evo-toast:hover { transform: translateY(-1px); box-shadow: 0 20px 52px rgba(0,0,0,0.50); }
+/* Keep edges perfectly straight for square style */
+.style-square .evo-underline {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.style-square .evo-underline .bar {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+/* merged duplicate hover transform into single rule above */
+
+/* removed unused .evo-bar placeholder */
+
+.evo-icon {
+  grid-area: icon;
+  color: var(--accent);
+  opacity: 0.95;
+  font-size: 20px;
+  /* Perfect centering inside the circular badge */
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  line-height: 0; /* remove font baseline offset */
+  text-align: center;
+  /* Plain icon: no circle */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Normalize inner icon elements for consistent centering/sizing */
+.evo-icon > svg { width: 28px; height: 22px; display: block; }
+.evo-icon > i, .evo-icon > span { display: inline-block; font-size: 28px; line-height: 1; }
+
+.evo-text {
+  grid-area: text;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: left;
+  justify-self: start;
+  align-self: start;
+  padding-top: 0; /* normalize across types */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* keep text left-aligned and stacked */
+  min-height: 32px; /* consistent row height to match larger icon */
+}
+.evo-text .title { font-weight: 600; margin-bottom: 4px; letter-spacing: -0.01em; }
+.evo-text .msg { color: var(--text); font-weight: 400; }
+
+/* removed unused close button styles */
+
+/* removed legacy .evo-progress stripe (unused) */
+
+/* Type accents */
+.type-info    { --accent: #60a5fa; }
+.type-success { --accent: #22c55e; }
+.type-warning { --accent: #f59e0b; }
+.type-error   { --accent: #ef4444; }
+
+/* Style variants */
+.style-square {
+  border-radius: 0px;
+}
+
+/* Slide animations for notify */
+@keyframes evo-slide-in {
+  0%   { opacity: 0; transform: translateX(80px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes evo-slide-out {
+  0%   { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; transform: translateX(120vw); }
+}
+
+/* Menu (Modal) */
+.evo-modal {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  background: transparent;
+  pointer-events: auto;
+  padding: 16px; /* breathing space on small screens */
+  animation: evo-modal-fade 160ms ease both;
+}
+.evo-panel {
+  position: relative;
+  min-width: 380px; max-width: 560px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)) , rgba(12,14,19,0.58);
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.50);
+  padding: 18px 20px;
+  color: var(--text);
+  overflow: hidden;
+  transform: translateY(0);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  animation: evo-panel-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.evo-panel::before { display: none; content: none; }
+.evo-panel::after { content: none; display: none; border: none; }
+.evo-panel .hd { display:flex; align-items:center; gap:12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)); }
+.evo-panel .hd .icon { color: var(--accent); font-size: 18px; filter: none; }
+.evo-panel .title { font-weight: 700; font-size: 20px; letter-spacing: 0.01em; }
+.evo-panel .msg { font-size: 13px; color: #cfd3d9; margin-top: 2px; }
+.evo-panel .actions { display:flex; gap:10px; margin-top: 14px; justify-content: flex-end; }
+
+/* Close button in header - icon only */
+.evo-close { margin-left: auto; appearance: none; border: none; background: transparent; color: #e7eaf1; width: auto; height: auto; display: inline-grid; place-items: center; cursor: pointer; padding: 0; }
+.evo-close:hover { background: transparent; color: var(--accent); }
+.evo-close i { font-size: 16px; line-height: 1; }
+
+/* Remove default focus ring on modal/panel and common elements */
+.evo-modal:focus, .evo-panel:focus, .evo-panel:focus-visible,
+.evo-list:focus, .evo-item:focus, .evo-btn:focus {
+  outline: none !important;
+}
+
+/* Panel animations */
+@keyframes evo-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes evo-panel-in {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.evo-btn { 
+  position: relative; appearance: none; border: 1px solid rgba(255,255,255,0.16); background: transparent;
+  color: var(--text); padding: 12px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;
+  transition: color 160ms ease, box-shadow 160ms ease, transform 90ms ease;
+}
+.evo-btn::after { content: ""; position: absolute; inset: -2px; border: 1.5px solid var(--accent); border-radius: inherit; opacity: 0; transform: scale(0.96); transition: opacity 160ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; }
+.evo-btn:hover::after { opacity: 1; transform: scale(1); }
+.evo-btn:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.28); }
+.evo-btn:active { transform: translateY(1px); }
+.evo-btn.primary { background: transparent; color: #ffffff; border-color: rgba(255,255,255,0.18); }
+.evo-btn.primary::after { border-color: var(--accent); }
+.evo-btn.primary:hover { text-shadow: none; }
+.evo-btn.confirm-yes { padding: 14px 22px; font-size: 15px; color: #ffffff; }
+
+/* Inputs */
+.evo-input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: var(--text); font-family: inherit; font-size: 14px; outline: none; margin-top: 10px; }
+.evo-input:focus { border-color: var(--accent); box-shadow: 0 0 0 0.5px var(--accentSoft); }
+
+.evo-list { margin-top: 8px; padding: 4px 2px; border-radius: 14px; border: none; background: rgba(12,14,19,0.50); position: relative; max-height: none; overflow: visible; }
+.evo-item { position: relative; display:flex; gap:10px; align-items: center; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: background-color 160ms ease, transform 120ms ease, box-shadow 160ms ease; }
+.evo-item + .evo-item { border-top: 1px solid rgba(255,255,255,0.10); }
+.evo-item .i { width: 16px; height: 16px; color: var(--accent); opacity: .9; display:flex; align-items:center; justify-content:center; }
+.evo-item .t { flex: 1; }
+.evo-item .t .l { font-weight: 600; font-size: 16px; }
+.evo-item .t .d { font-size: 12px; color: #cfd2d9; }
+.evo-item:hover { background: rgba(255,255,255,0.08); transform: translateX(1px); }
+.evo-item:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255,255,255,0.14) inset; }
+.evo-item.sel { background: rgba(255,255,255,0.07); border: 1px solid var(--accent); }
+.evo-item.sel::before { content: none; }
+.evo-item::after { content: ""; position: absolute; left: 6px; top: 50%; width: 2px; height: 0; border-radius: 2px; background: var(--accent); opacity: 0; transform: translateY(-50%); transition: height 160ms ease, opacity 160ms ease; }
+.evo-item:hover::after, .evo-item.sel::after { height: 60%; opacity: 0.95; }
+
+/* Make keyboard focus clearly visible */
+@keyframes evo-bump { 0% { transform: translateX(1px) scale(1);} 45% { transform: translateX(1px) scale(1.03);} 100% { transform: translateX(1px) scale(1);} }
+.evo-item.bump { animation: evo-bump 180ms ease; }
+.evo-item.disabled { opacity: .55; cursor: not-allowed; }
+.evo-item .r { color: #cfd2d9; opacity: .7; }
+
+/* Category menu */
+.evo-catgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
+.evo-cat { border: none; background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)) , rgba(12,14,19,0.56); border-radius: 14px; padding: 12px; cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.32); }
+.evo-cat::after { content: none; display: none; border: none; }
+.evo-cat:hover { background: rgba(255,255,255,0.06); box-shadow: 0 10px 30px rgba(0,0,0,0.30); }
+.evo-cat .ttl { font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.evo-cat .desc { font-size: 12px; color: #cfd2d9; }
+.evo-cat .meta { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.evo-cat .stat { font-size: 12px; color: #cfd2d9; background: rgba(255,255,255,0.04); padding: 6px 8px; border-radius: 0; }
+.evo-cat .stat .k { opacity: .8; margin-right: 6px; }
+.evo-cat .stat .v { color: var(--text); font-weight: 700; }
+.evo-cat .catprog { margin-top: 8px; height: 6px; background: rgba(255,255,255,0.12); border-radius: 999px; overflow: hidden; }
+.evo-cat .catprog .fill { height: 100%; width: 0%; background: var(--accent); border-radius: 999px; }
+.evo-catdetail .hdline { display:flex; align-items:center; justify-content: space-between; margin-top: 6px; }
+.evo-catdetail .hdline .title { font-weight: 700; font-size: 15px; }
+.evo-catdetail .hdline .meta { font-size: 12px; color: #cfd2d9; }
+.evo-catdetail .list { margin-top: 8px; }
+
+/* Multi-select check */
+.evo-item .chk { width: 22px; height: 22px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.24); display:flex; align-items:center; justify-content:center; color: transparent; background: rgba(255,255,255,0.06); }
+.evo-item .chk i { font-size: 12px; line-height: 1; }
+.evo-item.active .chk { background: var(--accent); border-color: var(--accent); color: #111318; }
+.evo-underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px; /* underline height */
+  background: rgba(255,255,255,0.06);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+.evo-underline .bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  position: relative;
+  box-shadow: 0 0 14px var(--accent), 0 0 26px var(--accentSoft);
+}
+.evo-underline .bar::before {
+  /* remove gradient overlay */
+  content: none;
+  display: none;
+}
+.evo-underline .bar.done::before { display: none; }
+.evo-underline .bar::after {
+  /* remove glow/gradient overlay */
+  content: none;
+  display: none;
+}
+.evo-underline .bar.done::after { display: none; }
+
+/* removed duplicate underline glow and unused underline pulse */
+
+/* Notify: Montserrat */
+.evo-toast .evo-text .msg {
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, sans-serif;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  font-size: 13px;
+  color: #d9dce3;
+  /* Keep message in place while lowering title */
+  margin-top: 3px;
+}
+
+/* If no title is provided, treat message as the primary line */
+.evo-toast .evo-text .msg:first-child {
+  text-transform: uppercase; /* make it uppercase */
+  font-size: 14px;           /* slightly larger */
+  margin-top: 6px;           /* nudge lower for better centering */
+  margin-left: 1px;          /* 1px to the right */
+}
+
+/* Optional title above message */
+.evo-toast .evo-text .title {
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  text-transform: uppercase;
+  line-height: 1.1;
+  /* Lower the title to align with the icon top */
+  margin-top: 7px;
+  margin-bottom: 2px;
+  color: var(--text);
+}
+
+/* Bring top-positioned notifications closer to the top edge */
+#evo-container.pos-top-right,
+#evo-container.pos-top-left,
+#evo-container.pos-top-center {
+  padding-top: 8px;
+}
+
+/* Unused legacy keyframes (soft variant). */
+@keyframes evo-pbar-center-out-scale-soft {
+  0%   { width: 0%; }
+  55%  { width: 80%; }
+  70%  { width: 92%; } /* plynulý prechod do spomaľovania */
+  85%  { width: 96%; }
+  100% { width: 100%; }
+}
